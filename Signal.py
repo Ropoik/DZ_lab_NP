@@ -1,21 +1,20 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy as np, matplotlib.pyplot as plt
 from pathlib import Path
 
-def smooth(data, w=10):
-    res = np.zeros_like(data)
-    for i in range(len(data)):
-        res[i] = np.mean(data[max(0, i-w+1):i+1])
-    return res
+def smooth(x, w=10):
+    c = np.cumsum(np.insert(x, 0, 0))
+    s = c[w:] - c[:-w]
+    return np.concatenate([c[1:w] / np.arange(1, w), s / w])[:len(x)]
 
-folder = Path("signals")
-for f in folder.glob("signal*.dat"):
-    raw = np.loadtxt(f)
-    filtered = smooth(raw)
-    plt.plot(raw, alpha=0.5, label="raw")
-    plt.plot(filtered, label="smoothed")
-    plt.legend()
-    plt.title(f.name)
-    plt.savefig(folder / f"{f.stem}_filtered.png")
+input_folder = Path('signals')
+output_folder = input_folder / 'filtered_plots'
+output_folder.mkdir(exist_ok=True)
+
+for f in input_folder.glob('signal*.dat'):
+    d = np.loadtxt(f)
+    sd = smooth(d)
+    plt.plot(d, alpha=0.7, label='raw')
+    plt.plot(sd, label='smoothed')
+    plt.legend(), plt.grid(), plt.title(f.stem)
+    plt.savefig(output_folder / f'{f.stem}_filtered.png')
     plt.close()
-    print(f"{f.name} done")
